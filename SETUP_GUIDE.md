@@ -254,7 +254,7 @@ curl http://localhost:5000/api/status
 ### Question Answering
 ```python
 # In backend
-from transformers import pipeline
+ transformers import pipeline
 
 qa_pipeline = pipeline("question-answering", 
                        model="distilbert-base-uncased-distilled-squad")
@@ -267,7 +267,7 @@ def ask_question():
     # Run QA on relevant text
     answer = qa_pipeline(question=query, context=relevant_docs[0]['chunk'])
     return jsonify(answer)
-```
+```from
 
 ### Document Summarization
 ```python

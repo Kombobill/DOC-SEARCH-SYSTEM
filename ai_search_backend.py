@@ -6,6 +6,7 @@ Handles document ingestion, embedding generation, and semantic search
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import numpy as np
+from transformers import pipeline
 import json
 import os
 from datetime import datetime
@@ -196,6 +197,14 @@ class VectorDB:
 
 # Initialize vector database
 vector_db = VectorDB()
+# Initialize QA pipeline
+qa_pipeline = None
+try:
+    qa_pipeline = pipeline("question-answering", 
+                          model="distilbert-base-uncased-distilled-squad")
+    print("✓ QA model loaded successfully")
+except Exception as e:
+    print(f"✗ Failed to load QA model: {e}")
 
 # ============= API ROUTES =============
 
