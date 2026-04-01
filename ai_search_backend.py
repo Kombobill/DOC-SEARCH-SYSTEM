@@ -289,6 +289,41 @@ def status():
         "documents_count": len(vector_db.documents),
         "model_loaded": embedding_model is not None
     }), 200
+@app.route('/api/ask', methods=['POST'])
+def ask_question():
+    """Ask a question about your documents"""
+    try:
+        data = request.json
+        query = data.get('query', '').strip()
+        
+        if not query:
+            return jsonify({"error": "Query cannot be empty"}), 400
+        
+        if not qa_pipeline:
+            return jsonify({"error": "QA model not loaded"}), 500
+        
+        # Find relevant documents
+        search_results = vector_db.search(query, top_k=3)
+        
+        if not search_results['results']:
+            return jsonify({"error": "No relevant documents found"}), 404
+        
+        # Get the most relevant chunk as context
+        context = search_results['results'][0]['chunk']
+        
+        # Run QA on the context
+        answer = qa_pipeline(question=query, context=context)
+        
+        return jsonify({
+            "query": query,
+            "answer": answer['answer'],
+            "confidence": round(answer['score'], 2),
+            "source_doc": search_results['results'][0]['filename'],
+            "source_chunk": search_results['results'][0]['chunk'][:200] + "..."
+        }), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     print("""
