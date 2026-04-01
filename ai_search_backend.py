@@ -333,6 +333,38 @@ def ask_question():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/summarize/<doc_id>', methods=['GET'])
+def summarize_document(doc_id):
+    """Summarize a document"""
+    try:
+        if doc_id not in vector_db.documents:
+            return jsonify({"error": "Document not found"}), 404
+        
+        if not summarizer:
+            return jsonify({"error": "Summarization model not loaded"}), 500
+        
+        doc = vector_db.documents[doc_id]
+        doc_text = doc['text']
+        
+        # Split long text if needed (BART has max length)
+        max_length = 1024
+        if len(doc_text) > max_length:
+            doc_text = doc_text[:max_length]
+        
+        # Generate summary
+        summary = summarizer(doc_text, max_length=150, min_length=50)
+        
+        return jsonify({
+            "doc_id": doc_id,
+            "filename": doc['filename'],
+            "summary": summary[0]['summary_text'],
+            "original_length": len(doc['text']),
+            "summary_length": len(summary[0]['summary_text'])
+        }), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     print("""
     ╔══════════════════════════════════════════════════════════╗
