@@ -205,6 +205,14 @@ try:
     print("✓ QA model loaded successfully")
 except Exception as e:
     print(f"✗ Failed to load QA model: {e}")
+    # Initialize summarization pipeline
+summarizer = None
+try:
+    summarizer = pipeline("summarization", 
+                         model="facebook/bart-large-cnn")
+    print("✓ Summarization model loaded successfully")
+except Exception as e:
+    print(f"✗ Failed to load summarization model: {e}")
 
 # ============= API ROUTES =============
 
