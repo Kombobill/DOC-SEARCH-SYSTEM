@@ -4,6 +4,8 @@ Handles document ingestion, embedding generation, and semantic search
 """
 
 from flask import Flask, request, jsonify, send_from_directory
+from PyPDF2 import PdfReader
+from docx import Document
 from flask_cors import CORS
 import numpy as np
 from transformers import pipeline
@@ -12,6 +14,7 @@ import os
 from datetime import datetime
 import hashlib
 from pathlib import Path
+
 import re
 
 # For embeddings - using sentence-transformers (local, free alternative to OpenAI)
@@ -403,6 +406,94 @@ def keyword_search_route():
             "results": results,
             "count": len(results)
         }), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/upload', methods=['POST'])
+def upload_document():
+    """Upload and process a document"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file provided"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        # Read file content based on file type
+        text = None
+        
+        if file.filename.endswith('.txt'):
+            text = file.read().decode('utf-8')
+        
+        elif file.filename.endswith('.pdf'):
+            try:
+                pdf = PdfReader(file)
+                text = "\n".join([page.extract_text() for page in pdf.pages])
+            except Exception as e:
+                return jsonify({"error": f"PDF read error: {str(e)}"}), 400
+        
+        elif file.filename.endswith('.docx'):
+            try:
+                doc = Document(file)
+                text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+            except Exception as e:
+                return jsonify({"error": f"DOCX read error: {str(e)}"}), 400
+        
+        else:
+            return jsonify({"error": "Supported formats: TXT, PDF, DOCX"}), 400
+        
+        if not text:
+            return jsonify({"error": "No text content found in file"}), 400
+        
+        # Add to vector database (rest of code stays the same)
+        result = vector_db.add_document(file.filename, text)
+        return jsonify(result), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/upload', methods=['POST'])
+def upload_document():
+    """Upload and process a document"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file provided"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        # Read file content based on file type
+        text = None
+        
+        if file.filename.endswith('.txt'):
+            text = file.read().decode('utf-8')
+        
+        elif file.filename.endswith('.pdf'):
+            try:
+                pdf = PdfReader(file)
+                text = "\n".join([page.extract_text() for page in pdf.pages])
+            except Exception as e:
+                return jsonify({"error": f"PDF read error: {str(e)}"}), 400
+        
+        elif file.filename.endswith('.docx'):
+            try:
+                doc = Document(file)
+                text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+            except Exception as e:
+                return jsonify({"error": f"DOCX read error: {str(e)}"}), 400
+        
+        else:
+            return jsonify({"error": "Supported formats: TXT, PDF, DOCX"}), 400
+        
+        if not text:
+            return jsonify({"error": "No text content found in file"}), 400
+        
+        # Add to vector database (rest of code stays the same)
+        result = vector_db.add_document(file.filename, text)
+        return jsonify(result), 200
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
