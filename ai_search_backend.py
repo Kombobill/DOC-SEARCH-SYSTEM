@@ -385,6 +385,27 @@ def summarize_document(doc_id):
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+@app.route('/api/search/keyword', methods=['POST'])
+def keyword_search_route():
+    """Keyword-based search (fallback for semantic search)"""
+    try:
+        data = request.json
+        query = data.get('query', '').strip()
+        
+        if not query:
+            return jsonify({"error": "Query cannot be empty"}), 400
+        
+        results = keyword_search(query, vector_db.documents)
+        
+        return jsonify({
+            "query": query,
+            "method": "keyword",
+            "results": results,
+            "count": len(results)
+        }), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     print("""
