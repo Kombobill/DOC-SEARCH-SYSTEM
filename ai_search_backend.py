@@ -214,6 +214,27 @@ try:
 except Exception as e:
     print(f"✗ Failed to load summarization model: {e}")
 
+def keyword_search(query, documents):
+    """Simple keyword search fallback"""
+    keywords = query.lower().split()
+    results = []
+    
+    for doc_id, doc_data in documents.items():
+        # Count matching keywords
+        matches = sum(1 for kw in keywords 
+                     if kw in doc_data['text'].lower())
+        
+        if matches > 0:
+            results.append({
+                "doc_id": doc_id,
+                "filename": doc_data['filename'],
+                "matches": matches,
+                "chunk_count": doc_data['chunk_count']
+            })
+    
+    # Sort by match count
+    return sorted(results, key=lambda x: x['matches'], reverse=True)
+
 # ============= API ROUTES =============
 
 @app.route('/')
