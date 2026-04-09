@@ -44,6 +44,19 @@ if HAS_TRANSFORMERS:
     except Exception as e:
         print(f"✗ Failed to load model: {e}")
 
+
+# Initialize QA model
+qa_pipeline = None
+if HAS_TRANSFORMERS:
+    try:
+        qa_pipeline = pipeline("question-answering", 
+                              model="distilbert-base-uncased-distilled-squad")
+        print("✓ Loaded QA model")
+    except Exception as e:
+        print(f"✗ Failed to load QA model: {e}")
+
+# Initialize vector database
+
 # Vector Database (in-memory + persistent storage)
 class VectorDB:
     def __init__(self):
